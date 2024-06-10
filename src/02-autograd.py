@@ -1,7 +1,6 @@
 # First following the tutorial on fundamentals of pytorch.autograd.
 
 import torch
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import math
@@ -98,7 +97,7 @@ def example3():
     autograd, as shown below.
     :return: Nothing
     """
-    
+
     a = torch.linspace(0., 2. * math.pi, steps=25, requires_grad=True)
     b = torch.sin_(a)  # <-- Error!!
     print(b)
