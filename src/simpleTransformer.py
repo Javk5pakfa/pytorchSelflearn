@@ -59,7 +59,7 @@ class ObservationObject:
         self.data = data if data is not None else pd.DataFrame()
         self.metadata = metadata if metadata is not None else {}
 
-        assert len(self.axis_titles) == len(self.data)
+        assert len(self.axis_titles) == len(self.data.columns)
 
     def get_axis_titles(self):
         return self.axis_titles
@@ -88,10 +88,19 @@ class ObservationObject:
     def has_metadata(self):
         return len(self.metadata) > 0
 
+    def print(self):
+        print("This observation contains axes: {}".format(self.axis_titles))
+        print("with data: ")
+        print(self.data)
+        print("and metadata: {}".format(self.metadata))
+
 
 if __name__ == "__main__":
-    test_data = read_csv("synthetic_data.csv",
-                         "/Users/jackhu/Downloads")
+    test_data = read_csv("agn_0_synthetic.csv",
+                         "/Users/jackhu/PycharmProjects/pytorchSelflearn"
+                         + "/data/agn_synthetic")
 
-    print(test_data)
-    print(test_data.columns)
+    test_data_obs = ObservationObject(axis_titles=["x", "y"],
+                                      data=test_data,
+                                      metadata={'type': 'agn'})
+    test_data_obs.print()
