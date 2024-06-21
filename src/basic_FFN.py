@@ -6,7 +6,6 @@ from simpleTransformer import Observation, read_csv
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
-import random
 
 
 class RegressionMLP(nn.Module):
@@ -111,8 +110,8 @@ train_dataset = TensorDataset(train_tensors)
 test_dataset = TensorDataset(test_tensors)
 
 # Tensor dataloaders.
-train_loader = DataLoader(dataset=train_dataset, batch_size=10, shuffle=True)
-test_loader = DataLoader(dataset=test_dataset, batch_size=10, shuffle=False)
+train_loader = DataLoader(dataset=train_dataset, batch_size=50, shuffle=True)
+test_loader = DataLoader(dataset=test_dataset, batch_size=50, shuffle=False)
 
 # Initialize ground truth.
 grd_truth = ground_truth()
@@ -126,7 +125,7 @@ best_mse = np.inf
 best_weights = None
 history = []
 
-num_epoch = 50
+num_epoch = 20
 
 for epoch in range(num_epoch):
     print("_" * 10)
@@ -176,3 +175,5 @@ plt.scatter(range(num_epoch), history[:num_epoch])
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.show()
+
+em_mlp.load_state_dict(best_weights)
