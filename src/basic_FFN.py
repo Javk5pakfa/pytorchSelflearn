@@ -88,92 +88,93 @@ def get_batch_tensors(ds: []):
     return tensors
 
 
-# Import a bunch of data.
-train_ds = get_batch_datasets(0,
-                              800,
-                              "agn_{}_synthetic.csv",
-                              "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
-                              ["x", "y"],
-                              {'type': 'agn'})
-test_ds = get_batch_datasets(900,
-                             1000,
-                             "agn_{}_synthetic.csv",
-                             "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/test",
-                             ["x", "y"],
-                             {'type': 'agn'})
+if __name__ == '__main__':
 
-train_tensors = torch.stack(get_batch_tensors(train_ds))
-test_tensors = torch.stack(get_batch_tensors(test_ds))
+    # Import a bunch of data.
+    train_ds = get_batch_datasets(0,
+                                  800,
+                                  "agn_{}_synthetic.csv",
+                                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
+                                  ["x", "y"],
+                                  {'type': 'agn'})
+    test_ds = get_batch_datasets(900,
+                                 1000,
+                                 "agn_{}_synthetic.csv",
+                                 "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/test",
+                                 ["x", "y"],
+                                 {'type': 'agn'})
 
-# Tensor datasets.
-train_dataset = TensorDataset(train_tensors)
-test_dataset = TensorDataset(test_tensors)
+    train_tensors = torch.stack(get_batch_tensors(train_ds))
+    test_tensors = torch.stack(get_batch_tensors(test_ds))
 
-# Tensor dataloaders.
-train_loader = DataLoader(dataset=train_dataset, batch_size=50, shuffle=True)
-test_loader = DataLoader(dataset=test_dataset, batch_size=50, shuffle=False)
+    # Tensor datasets.
+    train_dataset = TensorDataset(train_tensors)
+    test_dataset = TensorDataset(test_tensors)
 
-# Initialize ground truth.
-grd_truth = ground_truth()
+    # Tensor dataloaders.
+    train_loader = DataLoader(dataset=train_dataset, batch_size=50, shuffle=True)
+    test_loader = DataLoader(dataset=test_dataset, batch_size=50, shuffle=False)
 
-# Define RegressionMLP.
-em_mlp = RegressionMLP(100, 200, 100)
-loss_function = nn.MSELoss()
-optimize = optim.SGD(em_mlp.parameters(), lr=0.01)
+    # Initialize ground truth.
+    grd_truth = ground_truth()
 
-best_mse = np.inf
-best_weights = None
-history = []
+    # Define RegressionMLP.
+    em_mlp = RegressionMLP(100, 200, 100)
+    loss_function = nn.MSELoss()
+    optimize = optim.SGD(em_mlp.parameters(), lr=0.01)
 
-num_epoch = 20
+    best_mse = np.inf
+    best_weights = None
+    history = []
 
-for epoch in range(num_epoch):
-    print("_" * 10)
-    print("Epoch {}/{}".format(epoch + 1, num_epoch))
+    num_epoch = 20
 
-    # Training steps
-    em_mlp.train()
-    running_loss = 0.0
+    for epoch in range(num_epoch):
+        print("_" * 10)
+        print("Epoch {}/{}".format(epoch + 1, num_epoch))
 
-    for batch in train_loader:
-        tensor = batch[0]
-        # Forward pass
-        pred = em_mlp(tensor)
-        loss = loss_function(pred, tensor)
+        # Training steps
+        em_mlp.train()
+        running_loss = 0.0
 
-        # Backward pass
-        optimize.zero_grad()
-        loss.backward()
-        optimize.step()
-
-        running_loss += loss.item()
-
-    print("Training loss after epoch {}: {:.4f}".format(epoch + 1, running_loss / len(train_loader)))
-
-    # Now, evaluate accuracy
-    em_mlp.eval()
-    test_loss = 0.0
-
-    with torch.no_grad():
-        for batch in test_loader:
+        for batch in train_loader:
             tensor = batch[0]
-            test_mlp_pred = em_mlp(tensor)
-            loss = loss_function(test_mlp_pred, tensor)
-            test_loss += loss.item()
+            # Forward pass
+            pred = em_mlp(tensor)
+            loss = loss_function(pred, tensor)
 
-    test_loss /= len(test_loader)
-    history.append(test_loss)
-    print("Evaluated loss after epoch {}: {:.4f}".format(epoch + 1, test_loss))
-    print("_" * 10)
+            # Backward pass
+            optimize.zero_grad()
+            loss.backward()
+            optimize.step()
 
-    if test_loss < best_mse:
-        best_mse = test_loss
-        best_weights = copy.deepcopy(em_mlp.state_dict())
+            running_loss += loss.item()
 
+        print("Training loss after epoch {}: {:.4f}".format(epoch + 1, running_loss / len(train_loader)))
 
-plt.scatter(range(num_epoch), history[:num_epoch])
-plt.xlabel("Epoch")
-plt.ylabel("Loss")
-plt.show()
+        # Now, evaluate accuracy
+        em_mlp.eval()
+        test_loss = 0.0
 
-em_mlp.load_state_dict(best_weights)
+        with torch.no_grad():
+            for batch in test_loader:
+                tensor = batch[0]
+                test_mlp_pred = em_mlp(tensor)
+                loss = loss_function(test_mlp_pred, tensor)
+                test_loss += loss.item()
+
+        test_loss /= len(test_loader)
+        history.append(test_loss)
+        print("Evaluated loss after epoch {}: {:.4f}".format(epoch + 1, test_loss))
+        print("_" * 10)
+
+        if test_loss < best_mse:
+            best_mse = test_loss
+            best_weights = copy.deepcopy(em_mlp.state_dict())
+
+    plt.scatter(range(num_epoch), history[:num_epoch])
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.show()
+
+    em_mlp.load_state_dict(best_weights)
