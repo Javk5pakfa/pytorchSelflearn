@@ -50,6 +50,13 @@ def ground_truth(num=100):
 
 
 def pad_nan(in_array: np.array) -> np.array:
+    """
+    Given an array with some NaN values, pad with random value selected between
+    the largest and the smallest values in the array.
+
+    :param in_array: Original array.
+    :return: Same array with NaN values padded.
+    """
 
     # Step 1: Identify missing values
     missing_indices = np.isnan(in_array)
@@ -70,6 +77,17 @@ def pad_nan(in_array: np.array) -> np.array:
 
 
 def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}):
+    """
+    Getting a batch of datasets from csv files.
+
+    :param start_num: The starting number of the files.
+    :param end_num: The ending number of the files.
+    :param file_name: The file name of each of the files. Should have some formatting to allow the numbering to work.
+    :param file_path: Absolute path of the csv files.
+    :param axis_titles: Axis titles of the data files. Should be consistent in one batch of dataset.
+    :param metadata: Information of the dataset batch.
+    :return: A list of Observation objects.
+    """
 
     ds = []
     for i in np.arange(start_num, end_num):
@@ -81,6 +99,11 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_
 
 
 def get_batch_tensors(ds: []):
+    """
+    Getting a batch of tensors from a list of datasets in Observation format.
+    :param ds: List of datasets in pd.Dataframe format.
+    :return: A list of data tensors.
+    """
 
     tensors = []
     for df in ds:

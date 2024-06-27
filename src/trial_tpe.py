@@ -2,52 +2,54 @@
 From https://github.com/jalammar/jalammar.github.io/blob/master/notebookes/transformer/transformer_positional_encoding_graph.ipynb
 """
 import numpy as np
-from simpleTransformer import Observation, read_csv, TPE
-from basic_FFN import pad_nan
+from simpleTransformer import Observation, TPE
+from basic_FFN import pad_nan, get_batch_datasets
 import torch.nn as nn
 import torch
+from tqdm import tqdm
 
 
 class TrialTPE(TPE):
     """
-    Trial time-position embedder.
+    Trial one dimensional time-position embedder.
     """
 
-    def __init__(self, obs: Observation, d_emb: int, n_bands=1):
+    def __init__(self, d_emb: int, n_bands=1):
         """
 
-        :param obs: The Observation object.
         :param d_emb: Dimensionality of the embedding.
         :param n_bands: Number of bands in this Observation.
         """
 
         super().__init__()
         self.__pe = None
-        self.__obs_data = obs.get_data()
-        self.__n_pos = len(self.__obs_data.x)
-        self.__x_data = self.__obs_data.x.to_numpy()
-
-        temp_y = self.__obs_data.y.to_numpy()
-        self.__y_data = pad_nan(temp_y)
         self.__xy_rep_tensor = None
 
         assert d_emb > 0, "Number of dimensionality must be greater than zero."
         assert n_bands > 0, "Number of bands must be greater than zero."
-
         self.__d_emb = d_emb
         self.__n_bands = n_bands
 
-    def forward(self):
+        # nn related variables.
+        self.__data_lin = nn.Linear(1, self.__d_emb)
+
+    def forward(self, obs: Observation):
         # No need to split the bands. Just embed the y values and x values
         # to the same dimension.
 
+        # Load dataset.
+        obs_data = obs.get_data()
+        n_pos = len(obs_data.x)
+        x_data = obs_data.x.to_numpy()
+        temp_y = obs_data.y.to_numpy()
+        y_data = pad_nan(temp_y)  # Nan data is padded here.
+
         # Put y values thru a linear layer.
         y_emb_vals = []
-        y_lin = nn.Linear(1, self.__d_emb)
-        for val in self.__y_data:
-            y_emb_vals.append(y_lin(torch.Tensor([val])))
+        for val in y_data:
+            y_emb_vals.append(self.__data_lin(torch.Tensor([val])))
         y_tensor = torch.stack(y_emb_vals)
-        x_tensor = torch.Tensor(self.__positional_encoding(len(self.__x_data)))
+        x_tensor = torch.Tensor(self.__positional_encoding(n_pos))
         self.__xy_rep_tensor = x_tensor + y_tensor
 
     def __get_angles(self, pos, i):
@@ -98,11 +100,17 @@ class TrialTPE(TPE):
 
 
 if __name__ == '__main__':
-    df = read_csv("agn_10_synthetic.csv",
-                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic")
+    train_ds = get_batch_datasets(0,
+                                  800,
+                                  "agn_{}_synthetic.csv",
+                                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
+                                  ["x", "y"],
+                                  {'type': 'agn'})
 
-    ds = Observation(["x", "y"], df, {'type': 'agn'})
-    tpe = TrialTPE(ds, d_emb=8)
-    tpe.forward()
+    encoder = TrialTPE(32)
+    encoded_data = []
+    for observe in tqdm(train_ds):
+        encoder.forward(observe)
+        encoded_data.append(encoder.get_representation())
 
-    print(tpe.get_representation())
+    print(encoded_data)

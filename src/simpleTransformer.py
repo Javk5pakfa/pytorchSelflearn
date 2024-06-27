@@ -99,7 +99,7 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def forward(self):
+    def forward(self, obs: Observation):
         pass
 
 
@@ -111,7 +111,7 @@ class SimpleTimePositionEncoding(TPE):
     def __init__(self):
         super(SimpleTimePositionEncoding, self).__init__()
 
-    def forward(self):
+    def forward(self, obs: Observation):
         pass
 
 
