@@ -2,7 +2,7 @@
 This script contains my introductory attempt at creating a Transformer algorithm.
 
 Things to-do:
-1. TODO: Determine a set of example data that the algorithm should learn from.
+1. DONE: Determine a set of example data that the algorithm should learn from.
 2. TODO: Design algorithm by making a flow-chart and a class diagram.
 3. TODO: Write class and method signatures in this file.
 4. TODO: Implement methods in code.
@@ -12,18 +12,12 @@ Things to-do:
 
 """
 
-# STEP 1: Come up with a data set for experimenting. Ideally close to something
-#         like the actual Chandra event file data. Rafael mentions there will
-#         be synthetic data available soon...
-#         Maybe I should make something of my own first.
-
-# Try to generate dataset.
-
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+import abc
 
 
 def read_csv(filename: str,
@@ -36,11 +30,14 @@ def read_csv(filename: str,
     :return: A pandas dataframe.
     """
 
-    df = pd.read_csv(f"{abs_path}/{filename}")
+    if abs_path[-1] != "/":
+        df = pd.read_csv(f"{abs_path}/{filename}")
+    else:
+        df = pd.read_csv(f"{abs_path}{filename}")
     return df
 
 
-class ObservationObject:
+class Observation:
     """
     This object contains the raw data from one given dataset (observation).
     """
@@ -49,7 +46,7 @@ class ObservationObject:
                  data: pd.DataFrame,
                  metadata: dict = None):
         """
-        The constructor method for the ObservationObject class.
+        The constructor method for the Observation class.
         :param axis_titles: Names of the axis titles.
         :param data: Actual data to be read.
         :param metadata: Additional information about the dataset.
@@ -95,12 +92,35 @@ class ObservationObject:
         print("and metadata: {}".format(self.metadata))
 
 
+class TPE(nn.Module, metaclass=abc.ABCMeta):
+    """
+    Very simple time-position encoding interface for my
+    synthetic lightcurve data.
+    """
+
+    @abc.abstractmethod
+    def forward(self):
+        pass
+
+
+class SimpleTimePositionEncoding(TPE):
+    """
+    Test.
+    """
+
+    def __init__(self):
+        super(SimpleTimePositionEncoding, self).__init__()
+
+    def forward(self):
+        pass
+
+
 if __name__ == "__main__":
     test_data = read_csv("agn_0_synthetic.csv",
                          "/Users/jackhu/PycharmProjects/pytorchSelflearn"
                          + "/data/agn_synthetic")
 
-    test_data_obs = ObservationObject(axis_titles=["x", "y"],
-                                      data=test_data,
-                                      metadata={'type': 'agn'})
+    test_data_obs = Observation(axis_titles=["x", "y"],
+                                data=test_data,
+                                metadata={'type': 'agn'})
     test_data_obs.print()
