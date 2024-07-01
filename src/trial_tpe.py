@@ -3,7 +3,7 @@ From https://github.com/jalammar/jalammar.github.io/blob/master/notebookes/trans
 """
 import numpy as np
 from simpleTransformer import Observation, TPE
-from basic_FFN import pad_nan, get_batch_datasets
+from basic_FFN import get_batch_datasets
 import torch.nn as nn
 import torch
 from tqdm import tqdm
@@ -119,9 +119,3 @@ if __name__ == '__main__':
     for observe in tqdm(train_ds):
         encoder.forward(observe)
         encoded_data.append(encoder.get_representation())
-
-    for index, val in enumerate(encoded_data):
-        if index < 10:
-            print("Index: {}, Tensor: {}".format(index, val))
-        else:
-            break
