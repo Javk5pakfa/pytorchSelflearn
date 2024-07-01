@@ -1,4 +1,4 @@
 .idea
 data/
 *.bkp
-test_bed.ipynb
+/src/test_bed.ipynb
