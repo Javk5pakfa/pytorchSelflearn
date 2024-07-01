@@ -103,24 +103,12 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
         pass
 
 
-class SimpleTimePositionEncoding(TPE):
-    """
-    Test.
-    """
+class SelfAttention(nn.Module, metaclass=abc.ABCMeta):
 
-    def __init__(self):
-        super(SimpleTimePositionEncoding, self).__init__()
-
-    def forward(self, obs: Observation):
+    @abc.abstractmethod
+    def forward(self):
         pass
 
 
 if __name__ == "__main__":
-    test_data = read_csv("agn_0_synthetic.csv",
-                         "/Users/jackhu/PycharmProjects/pytorchSelflearn"
-                         + "/data/agn_synthetic")
-
-    test_data_obs = Observation(axis_titles=["x", "y"],
-                                data=test_data,
-                                metadata={'type': 'agn'})
-    test_data_obs.print()
+    pass
