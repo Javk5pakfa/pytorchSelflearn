@@ -1,5 +1,5 @@
-torch==2.2.2
+torch
 numpy==1.26.4
-matplotlib==3.9.0
-tqdm==4.66.4
-pandas==2.2.2
+matplotlib
+tqdm
+pandas
