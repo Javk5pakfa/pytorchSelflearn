@@ -26,5 +26,5 @@ class TrialLN(LayerNormalization):
         if config['bias'] is not None:
             self.__bias = nn.Parameter(torch.zeros(config['n_input_dimension']))
 
-    def forward(self, in_vec):
+    def forward(self, in_vec) -> torch.Tensor:
         return f.layer_norm(in_vec, self.__weight.shape, self.__weight, self.__bias)

@@ -1,30 +1,27 @@
-from dataTransformer.basic_FFN import get_batch_datasets
 from trial_encoding_block import TrialEncodingBlock
 from trial_tpe import TrialTPE
 from trial_ffn import TrialFFN
 from simpleTransformer import SimpleTransformer
 import torch
 import torch.nn as nn
-
 from tqdm import tqdm
-import json as js
 
 
 class TrialTransformer(SimpleTransformer):
     """
-        Initializes a Transformer model configuration based on passed parameters and composes sub-components including positional encoding, encoding blocks, and a final linear layer.
+    Initializes a Transformer model configuration based on passed parameters and composes sub-components including positional encoding, encoding blocks, and a final linear layer.
 
-        Preconditions:
-            - config must be a non-empty dictionary containing necessary keys like 'n_input_dimension' and 'n_encoding_blocks'.
-        Postconditions:
-            - Transformer model fully initialized with specified sub-components ready for training or inference.
+    Preconditions:
+        - config must be a non-empty dictionary containing necessary keys like 'n_input_dimension' and 'n_encoding_blocks'.
+    Postconditions:
+        - Transformer model fully initialized with specified sub-components ready for training or inference.
 
-        Parameters:
-            config (dict): Dictionary containing configuration parameters.
+    Parameters:
+        config (dict): Dictionary containing configuration parameters.
 
-        Returns:
-            None
-        """
+    Returns:
+        None
+    """
 
     def __init__(self, **config):
         """
@@ -47,39 +44,19 @@ class TrialTransformer(SimpleTransformer):
     def forward(self, initial_dataset: []) -> torch.Tensor:
         """
 
-        :param initial_dataset: List of
-        :return:
+        :param initial_dataset: List of Observations containing raw tabular data.
+        :return: torch.Tensor with learned representation of this dataset.
         """
 
         pre_transform_embs = []
-        print("Begin pretrain encoding...")
-        for obs in tqdm(initial_dataset):
+        for obs in tqdm(initial_dataset, desc="Begin pretrain encoding..."):
             self.__transformer.init_embeds.forward(obs)
             pre_transform_embs.append(self.__transformer.init_embeds.get_representation())
         pre_transform_embs = torch.cat(pre_transform_embs, dim=0)
 
-        print("Begin transformer block ops...")
         x = None
-        for block in tqdm(self.__transformer.blocks):
+        for block in tqdm(self.__transformer.blocks, desc="Begin transformer block ops..."):
             x = block(pre_transform_embs)
         x = self.__transformer.linear_final.forward(x)
 
         return x
-
-
-if __name__ == '__main__':
-
-    train_ds = get_batch_datasets(0,
-                                  800,
-                                  "agn_{}_synthetic.csv",
-                                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
-                                  ["x", "y"],
-                                  {'type': 'agn'})
-
-    with open("trial_configs.json", "r") as f:
-        config_dic = js.load(f)
-
-    test_transformer = TrialTransformer(**config_dic)
-
-    result = test_transformer.forward(train_ds)
-    print(result.shape)

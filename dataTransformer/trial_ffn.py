@@ -1,4 +1,5 @@
 from simpleTransformer import FeedForward
+import torch
 import torch.nn as nn
 
 
@@ -29,11 +30,11 @@ class TrialFFN(FeedForward):
         self.__activation = nn.ReLU()
         self.__output_linear = nn.Linear(8 * config["n_input_dimension"], config["n_input_dimension"])
 
-    def forward(self, in_vec):
+    def forward(self, in_vec) -> torch.Tensor:
         """
 
         :param in_vec: Input torch.Tensor.
-        :return:
+        :return: learned torch.Tensor vector.
         """
 
         in_vec = self.__input_linear(in_vec)

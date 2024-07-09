@@ -1,11 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import TensorDataset, DataLoader
 from simpleTransformer import Observation, read_csv
 import numpy as np
-import copy
-import matplotlib.pyplot as plt
 
 
 class RegressionMLP(nn.Module):
@@ -49,7 +45,7 @@ def ground_truth(num=100):
     return torch.Tensor(y_func_agn)
 
 
-def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}) -> []:
+def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}) -> [Observation]:
     """
     Getting a batch of datasets from csv files.
 
@@ -71,7 +67,7 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_
     return ds
 
 
-def get_batch_tensors(ds: []) -> torch.Tensor:
+def get_batch_tensors(ds: []) -> [torch.Tensor]:
     """
     Getting a batch of tensors from a list of datasets in Observation format.
     :param ds: List of datasets in pd.Dataframe format.
@@ -82,95 +78,3 @@ def get_batch_tensors(ds: []) -> torch.Tensor:
     for df in ds:
         tensors.append(torch.Tensor(df.get_data().y.to_numpy()).requires_grad_(True))
     return tensors
-
-
-if __name__ == '__main__':
-
-    # Import a bunch of data.
-    train_ds = get_batch_datasets(0,
-                                  800,
-                                  "agn_{}_synthetic.csv",
-                                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
-                                  ["x", "y"],
-                                  {'type': 'agn'})
-    test_ds = get_batch_datasets(900,
-                                 1000,
-                                 "agn_{}_synthetic.csv",
-                                 "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/test",
-                                 ["x", "y"],
-                                 {'type': 'agn'})
-
-    train_tensors = torch.stack(get_batch_tensors(train_ds))
-    test_tensors = torch.stack(get_batch_tensors(test_ds))
-
-    # Tensor datasets.
-    train_dataset = TensorDataset(train_tensors)
-    test_dataset = TensorDataset(test_tensors)
-
-    # Tensor dataloaders.
-    train_loader = DataLoader(dataset=train_dataset, batch_size=50, shuffle=True)
-    test_loader = DataLoader(dataset=test_dataset, batch_size=50, shuffle=False)
-
-    # Initialize ground truth.
-    grd_truth = ground_truth()
-
-    # Define RegressionMLP.
-    em_mlp = RegressionMLP(100, 200, 100)
-    loss_function = nn.MSELoss()
-    optimize = optim.SGD(em_mlp.parameters(), lr=0.01)
-
-    best_mse = np.inf
-    best_weights = None
-    history = []
-
-    num_epoch = 20
-
-    for epoch in range(num_epoch):
-        print("_" * 10)
-        print("Epoch {}/{}".format(epoch + 1, num_epoch))
-
-        # Training steps
-        em_mlp.train()
-        running_loss = 0.0
-
-        for batch in train_loader:
-            tensor = batch[0]
-            # Forward pass
-            pred = em_mlp(tensor)
-            loss = loss_function(pred, tensor)
-
-            # Backward pass
-            optimize.zero_grad()
-            loss.backward()
-            optimize.step()
-
-            running_loss += loss.item()
-
-        print("Training loss after epoch {}: {:.4f}".format(epoch + 1, running_loss / len(train_loader)))
-
-        # Now, evaluate accuracy
-        em_mlp.eval()
-        test_loss = 0.0
-
-        with torch.no_grad():
-            for batch in test_loader:
-                tensor = batch[0]
-                test_mlp_pred = em_mlp(tensor)
-                loss = loss_function(test_mlp_pred, tensor)
-                test_loss += loss.item()
-
-        test_loss /= len(test_loader)
-        history.append(test_loss)
-        print("Evaluated loss after epoch {}: {:.4f}".format(epoch + 1, test_loss))
-        print("_" * 10)
-
-        if test_loss < best_mse:
-            best_mse = test_loss
-            best_weights = copy.deepcopy(em_mlp.state_dict())
-
-    plt.scatter(range(num_epoch), history[:num_epoch])
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.show()
-
-    em_mlp.load_state_dict(best_weights)

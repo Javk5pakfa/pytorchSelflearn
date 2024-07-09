@@ -15,12 +15,6 @@ class TrialTPE(TPE):
         - config must include 'n_input_dimension' and 'max_len'.
     Postconditions:
         - Positional encoding is initialized.
-
-    Parameters:
-        config (dict): Configuration dictionary.
-
-    Returns:
-        None
     """
 
     def __init__(self, d_emb: int, n_bands=1):
@@ -85,30 +79,7 @@ class TrialTPE(TPE):
 
         return angle_rads
 
-    def __split_list_into_bands(self, original_list):
-        # DEPRECATED
-        # Calculate the length of each band
-
-        total_length = len(original_list)
-        band_size = total_length // self.__n_bands  # integer division to find minimum size of each band
-        remainder = total_length % self.__n_bands  # elements that won't fit evenly into bands
-
-        # Create the sub-lists
-        bands = []
-        start_index = 0
-        for i in range(self.__n_bands):
-            if i < remainder:
-                # If there's a remainder, add one more element to the first
-                # 'remainder' bands
-                end_index = start_index + band_size + 1
-            else:
-                end_index = start_index + band_size
-            bands.append(original_list[start_index:end_index])
-            start_index = end_index
-
-        return bands
-
-    def get_representation(self):
+    def get_representation(self) -> torch.Tensor:
         """
         Getter for embedded representation.
         :return: torch.Tensor of representation of one dataset.
