@@ -49,34 +49,7 @@ def ground_truth(num=100):
     return torch.Tensor(y_func_agn)
 
 
-def pad_nan(in_array: np.array) -> np.array:
-    """
-    Given an array with some NaN values, pad with random value selected between
-    the largest and the smallest values in the array.
-
-    :param in_array: Original array.
-    :return: Same array with NaN values padded.
-    """
-
-    # Step 1: Identify missing values
-    missing_indices = np.isnan(in_array)
-
-    # Step 2: Calculate the minimum and maximum values of the existing data
-    existing_values = in_array[~missing_indices]
-    min_val = np.min(existing_values)
-    max_val = np.max(existing_values)
-
-    # Step 3: Generate random values within the range [min_val, max_val]
-    random_values = np.random.uniform(low=min_val, high=max_val,
-                                      size=np.sum(missing_indices))
-
-    # Step 4: Fill in the missing values with the generated random values
-    in_array[missing_indices] = random_values
-
-    return in_array
-
-
-def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}):
+def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}) -> []:
     """
     Getting a batch of datasets from csv files.
 
@@ -98,7 +71,7 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_
     return ds
 
 
-def get_batch_tensors(ds: []):
+def get_batch_tensors(ds: []) -> torch.Tensor:
     """
     Getting a batch of tensors from a list of datasets in Observation format.
     :param ds: List of datasets in pd.Dataframe format.
@@ -107,7 +80,7 @@ def get_batch_tensors(ds: []):
 
     tensors = []
     for df in ds:
-        tensors.append(torch.Tensor(pad_nan(df.get_data().y.to_numpy())).requires_grad_(True))
+        tensors.append(torch.Tensor(df.get_data().y.to_numpy()).requires_grad_(True))
     return tensors
 
 
