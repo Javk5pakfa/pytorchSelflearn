@@ -3,7 +3,6 @@ From https://github.com/jalammar/jalammar.github.io/blob/master/notebookes/trans
 """
 import numpy as np
 from simpleTransformer import Observation, TPE
-from basic_FFN import get_batch_datasets
 import torch.nn as nn
 import torch
 from tqdm import tqdm
@@ -38,7 +37,7 @@ class TrialTPE(TPE):
         # Load dataset.
         obs_data = obs.get_data()
         n_pos = len(obs_data.x)
-        x_data = obs_data.x.to_numpy()
+        # x_data = obs_data.x.to_numpy()
         y_data = obs_data.y.to_numpy()
 
         # Positional encoding on the x-axis.
@@ -77,7 +76,9 @@ class TrialTPE(TPE):
         return angle_rads
 
     def __split_list_into_bands(self, original_list):
+        # DEPRECATED
         # Calculate the length of each band
+
         total_length = len(original_list)
         band_size = total_length // self.__n_bands  # integer division to find minimum size of each band
         remainder = total_length % self.__n_bands  # elements that won't fit evenly into bands
@@ -104,18 +105,3 @@ class TrialTPE(TPE):
         """
 
         return self.__xy_rep_tensor
-
-
-if __name__ == '__main__':
-    train_ds = get_batch_datasets(0,
-                                  800,
-                                  "agn_{}_synthetic.csv",
-                                  "/Users/jackhu/PycharmProjects/pytorchSelflearn/data/agn_synthetic",
-                                  ["x", "y"],
-                                  {'type': 'agn'})
-
-    encoder = TrialTPE(32)
-    encoded_data = []
-    for observe in tqdm(train_ds):
-        encoder.forward(observe)
-        encoded_data.append(encoder.get_representation())
