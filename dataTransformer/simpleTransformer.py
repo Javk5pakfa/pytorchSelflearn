@@ -12,11 +12,9 @@ Things to-do:
 
 """
 
-import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
 import abc
 
 
@@ -103,10 +101,59 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
         pass
 
 
-class SelfAttention(nn.Module, metaclass=abc.ABCMeta):
+class FeedForward(nn.Module, metaclass=abc.ABCMeta):
+    """
+    Feed forward fully connect layer interface.
+    """
 
     @abc.abstractmethod
-    def forward(self):
+    def forward(self, in_vec):
+        pass
+
+
+class LayerNormalization(nn.Module, metaclass=abc.ABCMeta):
+    """
+    Layer normalization layer interface.
+    """
+
+    @abc.abstractmethod
+    def forward(self, in_vec):
+        pass
+
+
+class SelfAttention(nn.Module, metaclass=abc.ABCMeta):
+    """
+    Transformer attention layer interface.
+
+    Variable attributes:
+    - d_emb: dimensionality of the input vectors.
+    - c_proj: casual projection of input vectors.
+    """
+
+    @abc.abstractmethod
+    def forward(self, in_embedded_vecs: torch.Tensor):
+        pass
+
+
+class SimpleTransformerBlock(nn.Module, metaclass=abc.ABCMeta):
+    """
+    Block operation of a transformer encoding layer.
+    """
+
+    @abc.abstractmethod
+    def forward(self, data_embs: torch.Tensor):
+        pass
+
+
+class SimpleTransformer(nn.Module, metaclass=abc.ABCMeta):
+    """
+    The input to the forward method of this transformer class should be
+    a list-like object of Observation objects that would be consumed
+    by the initial encoding layer.
+    """
+
+    @abc.abstractmethod
+    def forward(self, initial_dataset: []):
         pass
 
 
