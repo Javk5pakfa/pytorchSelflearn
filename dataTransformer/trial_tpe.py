@@ -5,12 +5,22 @@ import numpy as np
 from simpleTransformer import Observation, TPE
 import torch.nn as nn
 import torch
-from tqdm import tqdm
 
 
 class TrialTPE(TPE):
     """
-    Trial one dimensional time-position embedder.
+    Implements positional encoding for the Transformer.
+
+    Preconditions:
+        - config must include 'n_input_dimension' and 'max_len'.
+    Postconditions:
+        - Positional encoding is initialized.
+
+    Parameters:
+        config (dict): Configuration dictionary.
+
+    Returns:
+        None
     """
 
     def __init__(self, d_emb: int, n_bands=1):

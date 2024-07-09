@@ -11,6 +11,20 @@ import json as js
 
 
 class TrialTransformer(SimpleTransformer):
+    """
+        Initializes a Transformer model configuration based on passed parameters and composes sub-components including positional encoding, encoding blocks, and a final linear layer.
+
+        Preconditions:
+            - config must be a non-empty dictionary containing necessary keys like 'n_input_dimension' and 'n_encoding_blocks'.
+        Postconditions:
+            - Transformer model fully initialized with specified sub-components ready for training or inference.
+
+        Parameters:
+            config (dict): Dictionary containing configuration parameters.
+
+        Returns:
+            None
+        """
 
     def __init__(self, **config):
         """

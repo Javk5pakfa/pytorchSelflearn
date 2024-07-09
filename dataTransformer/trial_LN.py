@@ -6,7 +6,18 @@ import torch.nn.functional as f
 
 class TrialLN(LayerNormalization):
     """
-    Experimental layer norm implementation.
+    Implements layer normalization.
+
+    Preconditions:
+        - config must include 'n_input_dimension'.
+    Postconditions:
+        - Layer normalization is initialized.
+
+    Parameters:
+        config (dict): Configuration dictionary.
+
+    Returns:
+        None
     """
 
     def __init__(self, **config):

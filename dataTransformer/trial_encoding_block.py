@@ -7,7 +7,18 @@ from simpleTransformer import SimpleTransformerBlock
 
 class TrialEncodingBlock(SimpleTransformerBlock):
     """
-    Experimental implementation of transformer encoding block
+    Represents a single encoding block within a Transformer architecture, integrating attention, layer normalization, and feedforward neural network (FFN) layers.
+
+    Preconditions:
+        - config must include keys such as 'n_input_dimension' to properly configure sub-modules.
+    Postconditions:
+        - Encoding block is fully initialized and can process input embeddings to produce encoded outputs.
+
+    Parameters:
+        config (dict): Configuration parameters for attention, layer normalization, and FFN sub-modules.
+
+    Returns:
+        torch.Tensor: The output of the encoding block after processing input embeddings.
     """
 
     def __init__(self, **config):

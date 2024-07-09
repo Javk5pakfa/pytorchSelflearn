@@ -4,7 +4,18 @@ import torch.nn as nn
 
 class TrialFFN(FeedForward):
     """
-    Experimental implementation of FeedForward NN.
+    Implements a feed-forward neural network within the Transformer.
+
+    Preconditions:
+        - config must include 'n_input_dimension' and 'n_ffn_dimension'.
+    Postconditions:
+        - FFN is initialized.
+
+    Parameters:
+        config (dict): Configuration dictionary.
+
+    Returns:
+        None
     """
 
     def __init__(self, **config):
