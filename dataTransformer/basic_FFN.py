@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from simpleTransformer import Observation, read_csv
 import numpy as np
+from tqdm import tqdm
 
 
 class RegressionMLP(nn.Module):
@@ -45,7 +46,7 @@ def ground_truth(num=100):
     return torch.Tensor(y_func_agn)
 
 
-def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_titles: [], metadata: {}) -> [Observation]:
+def get_batch_datasets(start_num, end_num, file_name: str, file_path: str) -> []:
     """
     Getting a batch of datasets from csv files.
 
@@ -53,16 +54,15 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str, axis_
     :param end_num: The ending number of the files.
     :param file_name: The file name of each of the files. Should have some formatting to allow the numbering to work.
     :param file_path: Absolute path of the csv files.
-    :param axis_titles: Axis titles of the data files. Should be consistent in one batch of dataset.
-    :param metadata: Information of the dataset batch.
     :return: A list of Observation objects.
     """
 
     ds = []
-    for i in np.arange(start_num, end_num):
-        df = read_csv(file_name.format(i), file_path)
-        df_obs = Observation(axis_titles=axis_titles, data=df, metadata=metadata)
-        ds.append(df_obs)
+    for i in tqdm(np.arange(start_num, end_num), desc='Getting Datasets'):
+        df = read_csv(file_name.format(i), file_path).to_numpy()
+        df_x, df_y = df[:, 0], df[:, 1]
+        df_reformat = np.stack((df_x, df_y), axis=0)
+        ds.append(df_reformat)
 
     return ds
 
