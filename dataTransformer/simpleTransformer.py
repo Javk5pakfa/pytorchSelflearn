@@ -97,7 +97,7 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def forward(self, obs: Observation):
+    def forward(self, data: []):
         pass
 
 

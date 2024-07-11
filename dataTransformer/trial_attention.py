@@ -2,9 +2,6 @@ import torch
 import torch.nn as nn
 from simpleTransformer import SelfAttention
 
-# Imports for tests.
-import pickle as p
-
 
 class TrialAttention(SelfAttention):
     """
