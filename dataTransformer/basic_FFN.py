@@ -62,6 +62,7 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str) -> []
         df = read_csv(file_name.format(i), file_path).to_numpy()
         df_x, df_y = df[:, 0], df[:, 1]
         df_reformat = np.stack((df_x, df_y), axis=0)
+        # ds.append(np.nan_to_num(df_reformat, nan=-99.9))
         ds.append(df_reformat)
 
     return ds

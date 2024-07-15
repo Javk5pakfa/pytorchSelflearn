@@ -11,7 +11,7 @@ Things to-do:
 *. TODO: Determine additional steps needed.
 
 """
-
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -23,6 +23,7 @@ def read_csv(filename: str,
     """
     Helper function to read a CSV file into a pandas dataframe. Currently
     only supports CSV file.
+
     :param filename: Name of the csv file to read.
     :param abs_path: Absolute path to the csv file to read.
     :return: A pandas dataframe.
@@ -97,7 +98,7 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def forward(self, data: []):
+    def forward(self, data):
         pass
 
 

@@ -2,7 +2,7 @@
 From https://github.com/jalammar/jalammar.github.io/blob/master/notebookes/transformer/transformer_positional_encoding_graph.ipynb
 """
 import numpy as np
-from simpleTransformer import Observation, TPE
+from simpleTransformer import TPE
 import torch.nn as nn
 import torch
 
@@ -17,72 +17,81 @@ class TrialTPE(TPE):
         - Positional encoding is initialized.
     """
 
-    def __init__(self, d_emb: int, n_bands=1):
+    def __init__(self, d_emb: int, max_d_emb: int):
         """
 
-        :param d_emb: Dimensionality of the embedding.
-        :param n_bands: Number of bands in this Observation.
+        :param d_emb: Dimensionality of the embedding, as in for how many output
+        features should the input be projected to.
+        :param max_d_emb: Maximum dimensionality of the embedding. Essentially
+        the sequence length.
+
         """
 
         super().__init__()
         self.__pe = None
-        self.__xy_rep_tensor = None
+        self.__tp_emb_tensor = None
 
         assert d_emb > 0, "Number of dimensionality must be greater than zero."
-        assert n_bands > 0, "Number of bands must be greater than zero."
         self.__d_emb = d_emb
-        self.__n_bands = n_bands
+        self.__max_d_emb = max_d_emb
 
         # nn related variables.
+        # Since actual number of features is equal or below __d_emb,
+        # initialize linear layer to max number of features possible.
         self.__data_lin = nn.Linear(1, self.__d_emb)
 
-    def forward(self, obs: Observation):
+    def forward(self, data: torch.Tensor) -> None:
+        """
+        :param data: incoming singular Tensor containing a number of sets of
+        features. It assumes the first index is the number of sets of features
+        contained within.
 
-        # Load dataset.
-        obs_data = obs.get_data()
-        n_pos = len(obs_data.x)
-        # x_data = obs_data.x.to_numpy()
-        y_data = obs_data.y.to_numpy()
+        :return: None. The class object now holds a Tensor with the combined
+        embedding.
+        """
 
-        # Positional encoding on the x-axis.
-        x_tensor_temp = torch.Tensor(self.__positional_encoding(n_pos))
-        x_tensor_final = torch.empty(0, self.__d_emb)
+        # For each set of features and their positions, find ones that have
+        # padded nan values, obtain their indices, and truncate both Tensors
+        # until only non-nan values are present.
+        self.__tp_emb_tensor = []
+        for each_set in data:
+            feat_pos = each_set[0]
+            feat     = each_set[1]
 
-        # Put y values through a linear layer. Since we only want to pass
-        # non-nan values to the next layer, the positions of those in x-axis
-        # will also be included, with the rest discarded.
-        y_emb_vals = []
-        for index, val in enumerate(y_data):
-            if not np.isnan(val):
-                x_tensor_final = torch.cat((x_tensor_final, torch.reshape(x_tensor_temp[index], (1, self.__d_emb))), dim=0)
-                y_emb_vals.append(self.__data_lin(torch.Tensor([val])))
-        y_tensor_final = torch.stack(y_emb_vals)
+            # get mask for non-nan values in this set of features, then apply
+            # to both feature and feature_position Tensors.
+            feat_nans_mask = ~torch.isnan(feat)
+            feat     = feat[feat_nans_mask]
 
-        # Finally, linearly combine encodings.
-        assert x_tensor_final.shape == y_tensor_final.shape
-        self.__xy_rep_tensor = x_tensor_final + y_tensor_final
+            # Do encodings on positions and features.
+            feat_pos_emb = self.__positional_encoding(self.__max_d_emb)[feat_nans_mask]
+            feat_emb     = self.__data_lin(torch.unsqueeze(feat, -1))
+
+            self.__tp_emb_tensor.append(feat_pos_emb + feat_emb)
+
+        self.__tp_emb_tensor = torch.cat(self.__tp_emb_tensor, 0)
 
     def __get_angles(self, pos, i):
-        angle_rates = 1 / np.power(10000,
-                                   (2 * (i // 2)) / np.float32(self.__d_emb))
+        angle_rates = 1 / torch.pow(10000, (2 * (i // 2)).float() / self.__d_emb)
         return pos * angle_rates
 
-    def __positional_encoding(self, num_pos: int):
-        angle_rads = self.__get_angles(np.arange(num_pos)[:, np.newaxis],
-                                       np.arange(self.__d_emb)[np.newaxis, :])
+    def __positional_encoding(self, n_pos):
+        angle_rads = self.__get_angles(torch.arange(n_pos).unsqueeze(1),
+                                       torch.arange(self.__d_emb).unsqueeze(0))
 
         # apply sin to even indices in the array; 2i
-        angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
+        angle_rads[:, 0::2] = torch.sin(angle_rads[:, 0::2])
 
         # apply cos to odd indices in the array; 2i+1
-        angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
+        angle_rads[:, 1::2] = torch.cos(angle_rads[:, 1::2])
 
         return angle_rads
 
     def get_representation(self) -> torch.Tensor:
         """
-        Getter for embedded representation.
-        :return: torch.Tensor of representation of one dataset.
+        Getter method for embedded representation.
+
+        :return: torch.Tensor of representation of the tire dataset.
         """
 
-        return self.__xy_rep_tensor
+        return self.__tp_emb_tensor

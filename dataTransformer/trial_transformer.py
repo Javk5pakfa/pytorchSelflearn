@@ -35,24 +35,22 @@ class TrialTransformer(SimpleTransformer):
 
         self.__transformer = nn.ModuleDict(
             dict(
-                init_embeds=TrialTPE(self.__config["n_input_dimension"]),
+                init_embeds=TrialTPE(self.__config["n_input_dimension"],
+                                     self.__config["n_max_dimension"]),
                 blocks=nn.ModuleList([TrialEncodingBlock(**self.__config) for _ in range(self.__config["n_encoding_blocks"])]),
                 linear_final=TrialFFN(**self.__config),
             )
         )
 
-    def forward(self, initial_dataset: []) -> torch.Tensor:
+    def forward(self, init_ds: torch.Tensor) -> torch.Tensor:
         """
 
-        :param initial_dataset: List of Observations containing raw tabular data.
+        :param init_ds: List of Observations containing raw tabular data.
         :return: torch.Tensor with learned representation of this dataset.
         """
 
-        pre_transform_embs = []
-        for obs in tqdm(initial_dataset, desc="Begin pretrain encoding..."):
-            self.__transformer.init_embeds.forward(obs)
-            pre_transform_embs.append(self.__transformer.init_embeds.get_representation())
-        pre_transform_embs = torch.cat(pre_transform_embs, dim=0)
+        self.__transformer.init_embeds.forward(init_ds)
+        pre_transform_embs = self.__transformer.init_embeds.get_representation()
 
         x = None
         for block in tqdm(self.__transformer.blocks, desc="Begin transformer block ops..."):
