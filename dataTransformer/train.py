@@ -1,3 +1,5 @@
+import numpy as np
+
 from trial_transformer import TrialTransformer
 from basic_FFN import get_batch_datasets
 import torch
@@ -15,8 +17,8 @@ if __name__ == '__main__':
         options = load(f)
 
     # Initialize transformer object, make dataset list a Tensor.
-    ds_tensor = torch.Tensor(ds).requires_grad_(True)
+    ds_tensor = torch.Tensor(np.array(ds)).requires_grad_(True)
     transform = TrialTransformer(**options)
 
-    result = transform.forward(ds)
+    result = transform.forward(ds_tensor)
     print(result)
