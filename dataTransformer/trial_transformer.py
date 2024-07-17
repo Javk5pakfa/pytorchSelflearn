@@ -42,6 +42,8 @@ class TrialTransformer(SimpleTransformer):
             )
         )
 
+        self.learned_rep = None
+
     def forward(self, init_ds: torch.Tensor) -> torch.Tensor:
         """
 
@@ -53,8 +55,12 @@ class TrialTransformer(SimpleTransformer):
         pre_transform_embs = self.__transformer.init_embeds.get_representation()
 
         x = None
-        for block in tqdm(self.__transformer.blocks, desc="Begin transformer block ops..."):
+        for block in self.__transformer.blocks:
             x = block(pre_transform_embs)
         x = self.__transformer.linear_final.forward(x)
 
+        self.learned_rep = x.clone()
         return x
+
+    def get_representation(self) -> torch.Tensor:
+        return self.learned_rep

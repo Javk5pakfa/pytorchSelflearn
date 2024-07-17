@@ -58,7 +58,7 @@ def get_batch_datasets(start_num, end_num, file_name: str, file_path: str) -> []
     """
 
     ds = []
-    for i in tqdm(np.arange(start_num, end_num), desc='Getting Datasets'):
+    for i in tqdm(np.arange(start_num, end_num), desc='Getting Datasets from {}'.format(file_path)):
         df = read_csv(file_name.format(i), file_path).to_numpy()
         df_x, df_y = df[:, 0], df[:, 1]
         df_reformat = np.stack((df_x, df_y), axis=0)

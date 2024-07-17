@@ -22,7 +22,7 @@ class TrialFFN(FeedForward):
     def __init__(self, **config):
         """
 
-        :param config: {"input_dimension": int, ...}
+        :param config: {"n_input_dimension": int, ...}
         """
 
         super().__init__()

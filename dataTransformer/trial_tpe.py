@@ -61,7 +61,7 @@ class TrialTPE(TPE):
             # get mask for non-nan values in this set of features, then apply
             # to both feature and feature_position Tensors.
             feat_nans_mask = ~torch.isnan(feat)
-            feat     = feat[feat_nans_mask]
+            feat           = feat[feat_nans_mask]
 
             # Do encodings on positions and features.
             feat_pos_emb = self.__positional_encoding(self.__max_d_emb)[feat_nans_mask]

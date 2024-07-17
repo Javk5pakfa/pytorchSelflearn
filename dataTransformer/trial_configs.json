@@ -1,6 +1,7 @@
 {
-  "n_input_dimension": 100,
+  "n_input_dimension": 32,
   "n_max_dimension": 100,
+  "batch_size": 50,
   "n_encoding_blocks": 6,
   "multi_head_block_size": 8,
   "n_encoding_layer": 4,
