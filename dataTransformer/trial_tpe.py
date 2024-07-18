@@ -17,7 +17,7 @@ class TrialTPE(TPE):
         - Positional encoding is initialized.
     """
 
-    def __init__(self, d_emb: int, max_d_emb: int):
+    def __init__(self, d_emb: int, max_d_emb: int, fillna_val=-9.99):
         """
 
         :param d_emb: Dimensionality of the embedding, as in for how many output
@@ -30,6 +30,7 @@ class TrialTPE(TPE):
         super().__init__()
         self.__pe = None
         self.__tp_emb_tensor = None
+        self.__mask_tensor = None
 
         assert d_emb > 0, "Number of dimensionality must be greater than zero."
         self.__d_emb = d_emb
@@ -39,6 +40,7 @@ class TrialTPE(TPE):
         # Since actual number of features is equal or below __d_emb,
         # initialize linear layer to max number of features possible.
         self.__data_lin = nn.Linear(1, self.__d_emb)
+        self.fillna_val = fillna_val
 
     def forward(self, data: torch.Tensor) -> None:
         """
@@ -53,23 +55,26 @@ class TrialTPE(TPE):
         # For each set of features and their positions, find ones that have
         # padded nan values, obtain their indices, and truncate both Tensors
         # until only non-nan values are present.
-        self.__tp_emb_tensor = []
+        self.__tp_emb_tensor, self.__mask_tensor = [], []
         for each_set in data:
-            feat_pos = each_set[0]
             feat     = each_set[1]
 
             # get mask for non-nan values in this set of features, then apply
             # to both feature and feature_position Tensors.
-            feat_nans_mask = ~torch.isnan(feat)
-            feat           = feat[feat_nans_mask]
+            feat_nans_mask = torch.isnan(feat)
+            feat_inv_nans_mask = ~torch.isnan(feat)
+            feat           = torch.where(feat_nans_mask, torch.tensor(self.fillna_val), feat)
 
             # Do encodings on positions and features.
-            feat_pos_emb = self.__positional_encoding(self.__max_d_emb)[feat_nans_mask]
-            feat_emb     = self.__data_lin(torch.unsqueeze(feat, -1))
+            feat_inv_nans_mask = feat_inv_nans_mask.float().unsqueeze(1).expand(-1, self.__d_emb)
+            feat_pos_emb = self.__positional_encoding(self.__max_d_emb) * feat_inv_nans_mask
+            feat_emb     = self.__data_lin(torch.unsqueeze(feat, -1)) * feat_inv_nans_mask
 
             self.__tp_emb_tensor.append(feat_pos_emb + feat_emb)
+            self.__mask_tensor.append(feat_nans_mask)
 
         self.__tp_emb_tensor = torch.cat(self.__tp_emb_tensor, 0)
+        self.__mask_tensor = torch.cat(self.__mask_tensor, 0)
 
     def __get_angles(self, pos, i):
         angle_rates = 1 / torch.pow(10000, (2 * (i // 2)).float() / self.__d_emb)
@@ -91,7 +96,11 @@ class TrialTPE(TPE):
         """
         Getter method for embedded representation.
 
-        :return: torch.Tensor of representation of the tire dataset.
+        :return: torch.Tensor of representation of the entire dataset.
         """
 
         return self.__tp_emb_tensor
+
+    def get_masks(self):
+
+        return self.__mask_tensor

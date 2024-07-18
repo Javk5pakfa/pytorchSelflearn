@@ -16,7 +16,8 @@ class TrialAttention(SelfAttention):
         self.__c_attn = nn.Linear(self.__d_embd, 3 * self.__d_embd, bias=config['bias'])  # PyTorch doesn't support bias=False. TODO.
         self.__softmax = nn.Softmax(dim=-1)
 
-    def forward(self, in_embedded_vecs: torch.Tensor):
+    def forward(self, in_embedded_vecs: torch.Tensor, masks=None):
+        # masks.shape = (# of elements in this batch of sequences,)
 
         # For multi-head,
         # b_size, s_length, d_embd = in_embedded_vecs.size()
@@ -27,6 +28,10 @@ class TrialAttention(SelfAttention):
         # Attention procedures following the original paper.
         att = q @ k.transpose(-1, 0)
         att = att / k.size(-1) ** 0.5
+
+        if masks is not None:
+            att = att.masked_fill_(masks, float('-inf'))
+
         att = self.__softmax(att)
         att_final = att @ v
 

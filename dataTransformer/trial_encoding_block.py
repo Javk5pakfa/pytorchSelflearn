@@ -28,8 +28,8 @@ class TrialEncodingBlock(SimpleTransformerBlock):
         self.__ffn = TrialFFN(**config)
         self.__ln2 = TrialLN(**config)
 
-    def forward(self, data_embs: torch.Tensor) -> torch.Tensor:
-        output_sub_layer_1 = self.__attention(data_embs)
+    def forward(self, data_embs: torch.Tensor, masks=None) -> torch.Tensor:
+        output_sub_layer_1 = self.__attention(data_embs, masks=masks)
         output_an1 = self.__ln1(data_embs + output_sub_layer_1)
         output_sub_layer_2 = self.__ffn(output_an1)
         output_final = self.__ln2(output_an1 + output_sub_layer_2)

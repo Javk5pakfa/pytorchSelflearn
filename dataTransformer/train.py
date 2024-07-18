@@ -1,6 +1,7 @@
 import numpy as np
 from torch import optim
 from torch.utils.data import TensorDataset, DataLoader
+from tqdm import tqdm
 from trial_transformer import TrialTransformer
 from trial_tpe import TrialTPE
 from basic_FFN import get_batch_datasets
@@ -49,20 +50,21 @@ if __name__ == '__main__':
 
     # Epoch training loop.
     for epoch in range(num_epochs):
-        print("_" * 10)
+        print("_" * 10, flush=True)
         print("Epoch {}/{}".format(epoch + 1, num_epochs))
 
         transform.train()
         running_loss = 0.0
 
-        for batch in train_loader:
+        for batch in tqdm(train_loader):
             data_tensor = batch[0]
 
             data_tpe.forward(data_tensor)
             seq2_tensor = data_tpe.get_representation()
 
             # Currently, mask incoming data's missing values away. Might not
-            # be the best approach?
+            # be the best approach? Update 07/18: passing the entire sequences
+            # through now.
             pred = transform.forward(data_tensor)  # (n_sequence, 32)
             loss = loss_function(pred, seq2_tensor)
 
@@ -92,7 +94,7 @@ if __name__ == '__main__':
         print("Test loss: {}".format(test_loss))
         print("_" * 10)
 
-    exit(0)  # EXPERIMENTAL: Break.
+    # exit(0)  # EXPERIMENTAL: Break.
     # ---------- Prediction section ----------
 
     # Load a test dataset.

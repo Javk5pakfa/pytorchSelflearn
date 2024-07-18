@@ -101,6 +101,14 @@ class TPE(nn.Module, metaclass=abc.ABCMeta):
     def forward(self, data):
         pass
 
+    @abc.abstractmethod
+    def get_representation(self):
+        pass
+
+    @abc.abstractmethod
+    def get_masks(self):
+        pass
+
 
 class FeedForward(nn.Module, metaclass=abc.ABCMeta):
     """

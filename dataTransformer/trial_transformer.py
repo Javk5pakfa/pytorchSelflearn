@@ -47,20 +47,23 @@ class TrialTransformer(SimpleTransformer):
     def forward(self, init_ds: torch.Tensor) -> torch.Tensor:
         """
 
-        :param init_ds: List of Observations containing raw tabular data.
+        :param init_ds: A torch.Tensor containing raw tabular data.
         :return: torch.Tensor with learned representation of this dataset.
         """
 
         self.__transformer.init_embeds.forward(init_ds)
         pre_transform_embs = self.__transformer.init_embeds.get_representation()
+        pre_transform_masks = self.__transformer.init_embeds.get_masks()
 
         x = None
         for block in self.__transformer.blocks:
-            x = block(pre_transform_embs)
+            x = block(pre_transform_embs, masks=pre_transform_masks)
         x = self.__transformer.linear_final.forward(x)
 
         self.learned_rep = x.clone()
         return x
 
     def get_representation(self) -> torch.Tensor:
+        assert self.learned_rep is not None, "Train the transformer model first."
+
         return self.learned_rep
