@@ -12,7 +12,7 @@ class TrialTransformer(SimpleTransformer):
     Initializes a Transformer model configuration based on passed parameters and composes sub-components including positional encoding, encoding blocks, and a final linear layer.
 
     Preconditions:
-        - config must be a non-empty dictionary containing necessary keys like 'n_input_dimension' and 'n_encoding_blocks'.
+        - config must be a non-empty dictionary containing necessary keys like 'embed_dim' and 'n_encoding_blocks'.
     Postconditions:
         - Transformer model fully initialized with specified sub-components ready for training or inference.
 
@@ -29,20 +29,20 @@ class TrialTransformer(SimpleTransformer):
         :param config: Configurations for different modules of the transformer.
         """
 
-        super().__init__()
+        super(TrialTransformer, self).__init__()
         self.__config = config
-        self.__ffn = TrialFFN(**self.__config)
 
         self.__transformer = nn.ModuleDict(
             dict(
-                init_embeds=TrialTPE(self.__config["n_input_dimension"],
+                init_embeds=TrialTPE(self.__config["embed_dim"],
                                      self.__config["n_max_dimension"]),
                 blocks=nn.ModuleList([TrialEncodingBlock(**self.__config) for _ in range(self.__config["n_encoding_blocks"])]),
-                linear_final=TrialFFN(**self.__config),
+                # linear_final=TrialFFN(**self.__config),
+                linear_final=nn.Linear(self.__config["embed_dim"], 1),
             )
         )
 
-        self.learned_rep = None
+        self.__learned_rep = None
 
     def forward(self, init_ds: torch.Tensor) -> torch.Tensor:
         """
@@ -60,10 +60,11 @@ class TrialTransformer(SimpleTransformer):
             x = block(pre_transform_embs, masks=pre_transform_masks)
         x = self.__transformer.linear_final.forward(x)
 
-        self.learned_rep = x.clone()
+        self.__learned_rep = x.clone()
         return x
 
     def get_representation(self) -> torch.Tensor:
-        assert self.learned_rep is not None, "Train the transformer model first."
+        assert self.__learned_rep is not None, \
+            "Train the transformer model first."
 
-        return self.learned_rep
+        return self.__learned_rep

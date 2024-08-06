@@ -12,7 +12,7 @@ class TrialTPE(TPE):
     Implements positional encoding for the Transformer.
 
     Preconditions:
-        - config must include 'n_input_dimension' and 'max_len'.
+        - config must include 'embed_dim' and 'max_len'.
     Postconditions:
         - Positional encoding is initialized.
     """
@@ -57,18 +57,20 @@ class TrialTPE(TPE):
         # until only non-nan values are present.
         self.__tp_emb_tensor, self.__mask_tensor = [], []
         for each_set in data:
-            feat     = each_set[1]
+            feat = each_set[1]
 
             # get mask for non-nan values in this set of features, then apply
             # to both feature and feature_position Tensors.
             feat_nans_mask = torch.isnan(feat)
             feat_inv_nans_mask = ~torch.isnan(feat)
-            feat           = torch.where(feat_nans_mask, torch.tensor(self.fillna_val), feat)
+            feat = torch.where(feat_nans_mask, torch.tensor(self.fillna_val), feat)
 
-            # Do encodings on positions and features.
+            # Do encodings on positions and features. Apply mask to both
+            # positional embeddings and regular embeddings so that positions
+            # where data is missing are not learned by the transformer.
             feat_inv_nans_mask = feat_inv_nans_mask.float().unsqueeze(1).expand(-1, self.__d_emb)
-            feat_pos_emb = self.__positional_encoding(self.__max_d_emb) * feat_inv_nans_mask
-            feat_emb     = self.__data_lin(torch.unsqueeze(feat, -1)) * feat_inv_nans_mask
+            feat_pos_emb       = self.__positional_encoding(self.__max_d_emb) * feat_inv_nans_mask
+            feat_emb           = self.__data_lin(torch.unsqueeze(feat, -1)) * feat_inv_nans_mask
 
             self.__tp_emb_tensor.append(feat_pos_emb + feat_emb)
             self.__mask_tensor.append(feat_nans_mask)

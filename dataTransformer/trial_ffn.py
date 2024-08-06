@@ -8,7 +8,7 @@ class TrialFFN(FeedForward):
     Implements a feed-forward neural network within the Transformer.
 
     Preconditions:
-        - config must include 'n_input_dimension' and 'n_ffn_dimension'.
+        - config must include 'embed_dim' and 'n_ffn_dimension'.
     Postconditions:
         - FFN is initialized.
 
@@ -22,13 +22,14 @@ class TrialFFN(FeedForward):
     def __init__(self, **config):
         """
 
-        :param config: {"n_input_dimension": int, ...}
+        :param config: {"embed_dim": int, ...}
         """
 
         super().__init__()
-        self.__input_linear = nn.Linear(config["n_input_dimension"], 8 * config["n_input_dimension"])
+        d_emb = config['embed_dim']
+        self.__input_linear = nn.Linear(d_emb, 4 * d_emb)
         self.__activation = nn.ReLU()
-        self.__output_linear = nn.Linear(8 * config["n_input_dimension"], config["n_input_dimension"])
+        self.__output_linear = nn.Linear(4 * d_emb, d_emb)
 
     def forward(self, in_vec) -> torch.Tensor:
         """

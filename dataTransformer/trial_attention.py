@@ -12,7 +12,7 @@ class TrialAttention(SelfAttention):
         super().__init__()
 
         # Get initial variables from config dictionary.
-        self.__d_embd = config['n_input_dimension']
+        self.__d_embd = config['embed_dim']
         self.__c_attn = nn.Linear(self.__d_embd, 3 * self.__d_embd, bias=config['bias'])  # PyTorch doesn't support bias=False. TODO.
         self.__softmax = nn.Softmax(dim=-1)
 
@@ -23,14 +23,14 @@ class TrialAttention(SelfAttention):
         # b_size, s_length, d_embd = in_embedded_vecs.size()
 
         # Obtain q, k, v matrices.
-        q, k, v = self.__c_attn(in_embedded_vecs).split(self.__d_embd, dim=1)
+        q, k, v = self.__c_attn(in_embedded_vecs).split(self.__d_embd, dim=2)
 
         # Attention procedures following the original paper.
-        att = q @ k.transpose(-1, 0)
+        att = q @ k.transpose(-2, -1)
         att = att / k.size(-1) ** 0.5
 
-        if masks is not None:
-            att = att.masked_fill_(masks, float('-inf'))
+        # if masks is not None:
+        #     att = att.masked_fill_(masks == 1, float('-inf'))
 
         att = self.__softmax(att)
         att_final = att @ v
