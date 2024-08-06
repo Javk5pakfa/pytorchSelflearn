@@ -8,6 +8,7 @@ from basic_FFN import get_batch_datasets
 import torch
 import torch.nn as nn
 from json import load
+import pickle as pk
 
 
 if __name__ == '__main__':
@@ -44,9 +45,9 @@ if __name__ == '__main__':
     optimize = optim.SGD(transform.parameters(), lr=0.001)
     best_mse = np.inf
     best_weights = None
-    num_epochs = 10
+    num_epochs = 1
 
-    data_tpe = TrialTPE(options['n_input_dimension'], options['n_max_dimension'])
+    data_tpe = TrialTPE(options['embed_dim'], options['n_max_dimension'])
 
     # Epoch training loop.
     for epoch in range(num_epochs):
@@ -78,20 +79,20 @@ if __name__ == '__main__':
 
         # Evaluate accuracy.
         transform.eval()
-        test_loss = 0.0
+        validate_loss = 0.0
 
         with torch.no_grad():
             for batch in validate_loader:
-                test_data_tensor = batch[0]
-                data_tpe.forward(test_data_tensor)
-                test_seq_tensor = data_tpe.get_representation()
+                validate_data_tensor = batch[0]
+                data_tpe.forward(validate_data_tensor)
+                validate_seq_tensor = data_tpe.get_representation()
 
-                pred = transform.forward(test_data_tensor)
-                loss = loss_function(pred, test_seq_tensor)
-                test_loss += loss.item()
+                pred = transform.forward(validate_data_tensor)
+                loss = loss_function(pred, validate_seq_tensor)
+                validate_loss += loss.item()
 
-        test_loss /= len(validate_loader)
-        print("Test loss: {}".format(test_loss))
+        validate_loss /= len(validate_loader)
+        print("Test loss: {}".format(validate_loss))
         print("_" * 10)
 
     # exit(0)  # EXPERIMENTAL: Break.
@@ -106,5 +107,20 @@ if __name__ == '__main__':
     test_dataset = TensorDataset(test_ds_tensor)
     test_loader = DataLoader(dataset=test_dataset, batch_size=options['batch_size'], shuffle=True)
 
-    test_batch = next(iter(test_loader))
-    test_sequence = torch.unsqueeze(test_batch[0][0], 0)  # shape = (1, 2, 100)
+    with torch.no_grad():
+        test_sequence = next(iter(test_loader))
+        transform.forward(test_sequence[0])
+        prediction = transform.get_representation()
+
+    print(prediction)
+
+    # predictions = []
+    # with torch.no_grad():
+    #     for batch in tqdm(test_loader):
+    #         test_data_tensor = batch[0]
+    #         transform.forward(test_data_tensor)
+    #         predictions.append(transform.get_representation())
+    # predictions = torch.cat(predictions).squeeze()
+    #
+    # with open('predictions.pkl', 'wb') as f:
+    #     pk.dump(predictions, f)
